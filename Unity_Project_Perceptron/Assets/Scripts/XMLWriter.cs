@@ -45,6 +45,8 @@ public class XMLWriter {
         {
             DecideOnXml(xmlReader);
         }
+
+        xmlReader.Close();
     }
 
     private void DecideOnXml(XmlReader xmlReader)
@@ -92,6 +94,8 @@ public class XMLWriter {
         };
 
         WriteToFile(xmlTextWtiter);
+
+        xmlTextWtiter.Close();
     }
 
     private void WriteToFile(XmlTextWriter xmlTextWriter)

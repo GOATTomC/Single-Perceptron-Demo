@@ -5,16 +5,18 @@ using UnityEngine.UI;
 
 public class MainManager : MonoBehaviour {
 
+    private Trainer m_Trainer;
+
     private XMLWriter m_XMLWriter;
     private Text[] m_WeightTexts;
 
     private Perceptron m_Perceptron;
-    TrainingPoint[] m_TrainingPoints = new TrainingPoint[300];
+    TrainingPoint[] m_TrainingPoints;
 
     private Vector2 m_leftBottom, m_rightUp;
     private LineRenderer m_LineRenderer;
 
-    private float F(float x)
+    public float F(float x)
     {
         return x;
     }
@@ -36,20 +38,32 @@ public class MainManager : MonoBehaviour {
 
         m_XMLWriter = new XMLWriter(m_Perceptron);
 
-        for (int point = 0; point < m_TrainingPoints.Length; point++)
-        {
-            Vector2 position = new Vector2(Random.Range(m_leftBottom.x, m_rightUp.x), Random.Range(m_leftBottom.y, m_rightUp.y));
-            int label = ComputeLabel(position);
+        m_Trainer = new Trainer(m_XMLWriter, m_Perceptron, this, m_leftBottom, m_rightUp);
 
-            m_TrainingPoints[point] = new TrainingPoint(position, label);
-            GameObject pointObject = Instantiate<GameObject>(Resources.Load<GameObject>("TrainingPoint"), position, Quaternion.identity);
-            m_TrainingPoints[point].TrainingPointObject = pointObject;
-        }
+        //for (int point = 0; point < m_TrainingPoints.Length; point++)
+        //{
+        //    Vector2 position = new Vector2(Random.Range(m_leftBottom.x, m_rightUp.x), Random.Range(m_leftBottom.y, m_rightUp.y));
+        //    int label = ComputeLabel(position);
+
+        //    m_TrainingPoints[point] = new TrainingPoint(position, label);
+        //    GameObject pointObject = Instantiate<GameObject>(Resources.Load<GameObject>("TrainingPoint"), position, Quaternion.identity);
+        //    m_TrainingPoints[point].TrainingPointObject = pointObject;
+        //}
 
         UpdateWeightUI();
 	}
 
-    private int ComputeLabel(Vector2 position)
+    public GameObject Spawn(Vector2 position)
+    {
+        return Instantiate<GameObject>(Resources.Load<GameObject>("TrainingPoint"), position, Quaternion.identity); 
+    }
+
+    public void DestroyGameObject(GameObject gameObject)
+    {
+        Destroy(gameObject);
+    }
+
+    public int ComputeLabel(Vector2 position)
     {
         if (position.y > F(position.x))
             return 1;
@@ -66,10 +80,10 @@ public class MainManager : MonoBehaviour {
     private void HandleInput()
     {
         if (Input.GetKeyDown(KeyCode.Space))
-            SpacePress();
+            TrainPerceptron();
     }
 
-    private void SpacePress()
+    private void TrainPerceptron()
     {
         for (int point = 0; point < m_TrainingPoints.Length; point++)
         {
@@ -99,7 +113,75 @@ public class MainManager : MonoBehaviour {
         m_XMLWriter.StartSaving();
     }
 
-    private void UpdateWeightUI() //TODO make for loop
+    public void StartPerceptronTraining()
+    {
+        StartFieldClearing();
+        m_Trainer.StartLearnProcess();
+    }
+
+    public void StartPerceptron()
+    {
+        UsePerceptron();
+    }
+
+    private void UsePerceptron()
+    {
+        if (m_TrainingPoints == null)
+            return;
+
+        for (int point = 0; point < m_TrainingPoints.Length; point++)
+        {
+            int guess = m_Perceptron.FeedForward(m_TrainingPoints[point].Inputs);
+
+            if (guess > 0)
+            {
+                m_TrainingPoints[point].TrainingPointObject.GetComponent<SpriteRenderer>().color = Color.red;
+            }
+            else
+            {
+                m_TrainingPoints[point].TrainingPointObject.GetComponent<SpriteRenderer>().color = Color.cyan;
+            }
+        }
+    }
+
+    public void StartFieldCreation()
+    {
+        StartFieldClearing();
+        CreateField();
+    }
+
+    private void CreateField()
+    {
+        m_TrainingPoints = new TrainingPoint[Random.Range(250, 350)]; //TODO REMOVE MAGIC NUMBERS
+
+        for (int point = 0; point < m_TrainingPoints.Length; point++)
+        {
+            Vector2 position = new Vector2(Random.Range(m_leftBottom.x, m_rightUp.x), Random.Range(m_leftBottom.y, m_rightUp.y));
+            int label = ComputeLabel(position);
+
+            m_TrainingPoints[point] = new TrainingPoint(position, label);
+            GameObject pointObject = Spawn(position);
+            m_TrainingPoints[point].TrainingPointObject = pointObject;
+        }
+    }
+
+    public void StartFieldClearing()
+    {
+        ClearField();
+    }
+
+    private void ClearField()
+    {
+        if (m_TrainingPoints == null)
+            return;
+
+        for (int point = 0; point < m_TrainingPoints.Length; point++)
+        {
+            DestroyGameObject(m_TrainingPoints[point].TrainingPointObject);
+        }
+    }
+
+    public void UpdateWeightUI()
     {
 
         for (int weight = 0; weight < m_WeightTexts.Length; weight++)
