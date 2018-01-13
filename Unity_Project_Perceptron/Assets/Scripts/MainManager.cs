@@ -5,6 +5,8 @@ using UnityEngine.UI;
 
 public class MainManager : MonoBehaviour {
 
+    private const int MAX_ITTERATIONS = 10;
+
     private Trainer m_Trainer;
 
     private XMLWriter m_XMLWriter;
@@ -15,6 +17,8 @@ public class MainManager : MonoBehaviour {
 
     private Vector2 m_leftBottom, m_rightUp;
     private LineRenderer m_LineRenderer;
+
+    private Coroutine m_ItterateRoutine;
 
     public float F(float x)
     {
@@ -85,6 +89,9 @@ public class MainManager : MonoBehaviour {
 
     private void TrainPerceptron()
     {
+        if (m_TrainingPoints == null)
+            return;
+
         for (int point = 0; point < m_TrainingPoints.Length; point++)
         {
             int guess = m_Perceptron.FeedForward(m_TrainingPoints[point].Inputs);
@@ -117,6 +124,12 @@ public class MainManager : MonoBehaviour {
     {
         StartFieldClearing();
         m_Trainer.StartLearnProcess();
+        StartFieldClearing();
+    }
+
+    public void StartPercreptronTrainOnce()
+    {
+        TrainPerceptron();
     }
 
     public void StartPerceptron()
@@ -178,6 +191,26 @@ public class MainManager : MonoBehaviour {
         for (int point = 0; point < m_TrainingPoints.Length; point++)
         {
             DestroyGameObject(m_TrainingPoints[point].TrainingPointObject);
+        }
+    }
+    
+    public void StartVisualPerceptronSolve()
+    {
+        if (m_ItterateRoutine != null)
+            StopCoroutine(m_ItterateRoutine);
+
+        m_ItterateRoutine = StartCoroutine(SolveFieldItterate());
+    }
+
+    private IEnumerator SolveFieldItterate()
+    {
+        for (int i = 0; i < MAX_ITTERATIONS; i++)
+        {
+            StartFieldClearing();
+            StartFieldCreation();
+            StartPerceptron();
+            yield return new WaitForSeconds(3f);
+
         }
     }
 
