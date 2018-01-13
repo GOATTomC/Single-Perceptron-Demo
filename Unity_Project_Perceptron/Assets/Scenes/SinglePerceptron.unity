@@ -1573,7 +1573,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 629286174}
-        m_MethodName: SaveButtonClick
+        m_MethodName: StartFieldClearing
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
